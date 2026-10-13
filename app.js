@@ -356,6 +356,154 @@ const QUESTIONS_DATABASE = [
       return matches >= 2;
     },
     explanation: "An ecosystem consists of biotic (living) and abiotic (physical) components continually exchanging matter and energy."
+  },
+
+  // ==========================================
+  // SECTION 5: INLINE DROPDOWN (FILL IN MULTIPLE BLANKS) QUESTIONS
+  // ==========================================
+  {
+    id: "drp_gen_1",
+    part: "part5",
+    partName: "Inline Dropdown",
+    subject: "science",
+    subjectName: "Science & Tech",
+    type: "dropdown",
+    points: 1,
+    question: "Complete the statement by selecting the most appropriate term from each dropdown:",
+    template: "Just like how students still learn [b1] with the invention of [b2] , it is still vital for students to still [b3] in the age of [b4] .",
+    dropdowns: [
+      {
+        id: "b1",
+        placeholder: "[ Select ]",
+        options: ["arithmetic", "painting", "gymnastics", "calligraphy"],
+        correct: "arithmetic"
+      },
+      {
+        id: "b2",
+        placeholder: "[ Select ]",
+        options: ["calculators", "microscopes", "telephones", "compasses"],
+        correct: "calculators"
+      },
+      {
+        id: "b3",
+        placeholder: "[ Select ]",
+        options: ["think critically", "sleep in class", "memorize answers", "avoid homework"],
+        correct: "think critically"
+      },
+      {
+        id: "b4",
+        placeholder: "[ Select ]",
+        options: ["Artificial Intelligence", "Industrial Revolution", "Bronze Age", "Space Age"],
+        correct: "Artificial Intelligence"
+      }
+    ],
+    expectedAnswerDisplay: "1: arithmetic | 2: calculators | 3: think critically | 4: Artificial Intelligence",
+    explanation: "Just as calculators didn't remove the need for foundational arithmetic, the emergence of Artificial Intelligence makes human critical thinking, reasoning, and conceptual clarity even more crucial."
+  },
+  {
+    id: "drp_sci_1",
+    part: "part5",
+    partName: "Inline Dropdown",
+    subject: "science",
+    subjectName: "Science",
+    type: "dropdown",
+    points: 1,
+    question: "Choose the correct scientific terms to complete the description of plant photosynthesis:",
+    template: "During photosynthesis, plants take in [b1] from the air and [b2] from the soil. Utilizing light energy trapped by [b3] , they synthesize glucose and release [b4] as a byproduct.",
+    dropdowns: [
+      {
+        id: "b1",
+        placeholder: "[ Select ]",
+        options: ["carbon dioxide", "nitrogen gas", "helium", "methane"],
+        correct: "carbon dioxide"
+      },
+      {
+        id: "b2",
+        placeholder: "[ Select ]",
+        options: ["water", "crude oil", "mercury", "alcohol"],
+        correct: "water"
+      },
+      {
+        id: "b3",
+        placeholder: "[ Select ]",
+        options: ["chlorophyll", "hemoglobin", "melanin", "keratin"],
+        correct: "chlorophyll"
+      },
+      {
+        id: "b4",
+        placeholder: "[ Select ]",
+        options: ["oxygen", "carbon monoxide", "argon", "hydrogen sulfide"],
+        correct: "oxygen"
+      }
+    ],
+    expectedAnswerDisplay: "1: carbon dioxide | 2: water | 3: chlorophyll | 4: oxygen",
+    explanation: "Photosynthesis: 6CO₂ + 6H₂O + solar energy (absorbed by chlorophyll) → C₆H₁₂O₆ (glucose) + 6O₂ (oxygen)."
+  },
+  {
+    id: "drp_math_1",
+    part: "part5",
+    partName: "Inline Dropdown",
+    subject: "math",
+    subjectName: "Mathematics",
+    type: "dropdown",
+    points: 1,
+    question: "Complete the geometric theorem and calculate the missing side using the dropdowns:",
+    template: "In a right triangle, the side opposite the 90° angle is called the [b1] . By the Pythagorean theorem, the square of this side equals the [b2] of the squares of the other two sides. If the perpendicular legs measure 6 cm and 8 cm, this side is [b3] cm.",
+    dropdowns: [
+      {
+        id: "b1",
+        placeholder: "[ Select ]",
+        options: ["hypotenuse", "adjacent leg", "altitude", "perimeter"],
+        correct: "hypotenuse"
+      },
+      {
+        id: "b2",
+        placeholder: "[ Select ]",
+        options: ["sum", "difference", "product", "quotient"],
+        correct: "sum"
+      },
+      {
+        id: "b3",
+        placeholder: "[ Select ]",
+        options: ["10", "14", "48", "100"],
+        correct: "10"
+      }
+    ],
+    expectedAnswerDisplay: "1: hypotenuse | 2: sum | 3: 10",
+    explanation: "In a right triangle, c² = a² + b². For legs 6 and 8: 6² + 8² = 36 + 64 = 100. Hypotenuse c = √100 = 10 cm."
+  },
+  {
+    id: "drp_sci_2",
+    part: "part5",
+    partName: "Inline Dropdown",
+    subject: "science",
+    subjectName: "Science",
+    type: "dropdown",
+    points: 1,
+    question: "Select the appropriate phase change terms for the stages of Earth's hydrologic cycle:",
+    template: "Liquid surface water transforms into water vapor through the process of [b1] . As warm vapor ascends into the atmosphere, it cools and undergoes [b2] to create clouds. Finally, water returns to the Earth's surface via [b3] .",
+    dropdowns: [
+      {
+        id: "b1",
+        placeholder: "[ Select ]",
+        options: ["evaporation", "freezing", "combustion", "filtration"],
+        correct: "evaporation"
+      },
+      {
+        id: "b2",
+        placeholder: "[ Select ]",
+        options: ["condensation", "sublimation", "oxidation", "photosynthesis"],
+        correct: "condensation"
+      },
+      {
+        id: "b3",
+        placeholder: "[ Select ]",
+        options: ["precipitation", "transpiration", "evaporation", "conduction"],
+        correct: "precipitation"
+      }
+    ],
+    expectedAnswerDisplay: "1: evaporation | 2: condensation | 3: precipitation",
+    explanation: "Evaporation transforms liquid water into vapor, condensation produces droplets inside clouds, and precipitation brings water back to Earth as rain or snow."
   }
 ];
 
@@ -850,6 +998,11 @@ class WorksheetApp {
       const item = { ...q };
       if ((item.type === "radio" || item.type === "multi") && item.options) {
         item.options = this.shuffleArray(item.options);
+      } else if (item.type === "dropdown" && item.dropdowns) {
+        item.dropdowns = item.dropdowns.map(d => ({
+          ...d,
+          options: this.shuffleArray(d.options)
+        }));
       }
       return item;
     });
@@ -877,6 +1030,7 @@ class WorksheetApp {
       if (this.currentFilter === "all") return true;
       if (this.currentFilter === "radio") return q.type === "radio";
       if (this.currentFilter === "multi") return q.type === "multi";
+      if (this.currentFilter === "dropdown") return q.type === "dropdown";
       if (this.currentFilter === "short") return q.type === "short";
       if (this.currentFilter === "essay") return q.type === "essay";
       if (this.currentFilter === "math") return q.subject === "math";
@@ -909,6 +1063,9 @@ class WorksheetApp {
       if (q.type === "multi") {
         typeTagClass = "tag-type-multi";
         typeLabel = "☑️ Multi-Select";
+      } else if (q.type === "dropdown") {
+        typeTagClass = "tag-type-dropdown";
+        typeLabel = "🔽 Inline Dropdowns";
       } else if (q.type === "short") {
         typeTagClass = "tag-type-short";
         typeLabel = "✍️ Short Answer";
@@ -1052,6 +1209,50 @@ class WorksheetApp {
             </div>
           </div>
         `;
+      } else if (q.type === "dropdown") {
+        const userObj = (typeof this.userAnswers[q.id] === "object" && this.userAnswers[q.id] !== null) ? this.userAnswers[q.id] : {};
+        let renderedTemplate = this.escapeHtml(q.template);
+
+        q.dropdowns.forEach((d, dIdx) => {
+          const token = `[${d.id}]`;
+          const selectedVal = userObj[d.id] || "";
+          const selectId = `drp_${q.id}_${d.id}`;
+
+          const selectHTML = `
+            <span class="inline-select-wrapper">
+              <select 
+                class="inline-dropdown-select ${selectedVal ? "has-value" : ""}" 
+                id="${selectId}"
+                data-question-id="${q.id}" 
+                data-blank-id="${d.id}"
+                ${this.isSubmitted ? "disabled" : ""}
+                aria-label="Dropdown ${dIdx + 1}"
+              >
+                <option value="" ${!selectedVal ? "selected" : ""} disabled hidden>${d.placeholder || "[ Select ]"}</option>
+                ${d.options.map(opt => `
+                  <option value="${this.escapeHtml(opt)}" ${selectedVal === opt ? "selected" : ""}>
+                    ${this.escapeHtml(opt)}
+                  </option>
+                `).join("")}
+              </select>
+              <span class="select-chevron">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+              </span>
+            </span>
+          `;
+          renderedTemplate = renderedTemplate.replace(token, selectHTML);
+        });
+
+        contentHTML = `
+          <div class="cloze-question-card-body">
+            <span class="cloze-points-badge">${q.points || 1} pts</span>
+            <div class="cloze-content-flow">
+              ${renderedTemplate}
+            </div>
+          </div>
+        `;
       }
 
       const feedbackHTML = `
@@ -1075,10 +1276,18 @@ class WorksheetApp {
 
   isQuestionAnswered(qId) {
     const val = this.userAnswers[qId];
+    if (val === undefined || val === null) return false;
     if (Array.isArray(val)) {
       return val.length > 0;
     }
-    return val !== undefined && val !== null && val.toString().trim().length > 0;
+    if (typeof val === "object") {
+      const q = this.currentQuestions.find(item => item.id === qId);
+      if (q && q.dropdowns) {
+        return q.dropdowns.every(d => val[d.id] && val[d.id].toString().trim().length > 0);
+      }
+      return Object.keys(val).length > 0;
+    }
+    return val.toString().trim().length > 0;
   }
 
   bindWorksheetEvents() {
@@ -1175,6 +1384,36 @@ class WorksheetApp {
           card.classList.add("answered");
         } else {
           delete this.userAnswers[qId];
+          card.classList.remove("answered");
+        }
+
+        this.updateProgress();
+      }
+    });
+
+    // Inline dropdown select changes
+    this.container.addEventListener("change", (e) => {
+      if (e.target && e.target.classList.contains("inline-dropdown-select")) {
+        const select = e.target;
+        const qId = select.dataset.questionId;
+        const blankId = select.dataset.blankId;
+        const card = document.getElementById(`card_${qId}`);
+
+        if (!this.userAnswers[qId] || typeof this.userAnswers[qId] !== "object") {
+          this.userAnswers[qId] = {};
+        }
+
+        if (select.value) {
+          this.userAnswers[qId][blankId] = select.value;
+          select.classList.add("has-value");
+        } else {
+          delete this.userAnswers[qId][blankId];
+          select.classList.remove("has-value");
+        }
+
+        if (this.isQuestionAnswered(qId)) {
+          card.classList.add("answered");
+        } else {
           card.classList.remove("answered");
         }
 
@@ -1305,6 +1544,12 @@ class WorksheetApp {
           if (hasAllCorrect && hasNoWrong && selected.length > 0) {
             isCorrect = true;
           }
+        } else if (q.type === "dropdown") {
+          const userObj = (typeof userVal === "object" && userVal !== null) ? userVal : {};
+          const allCorrect = q.dropdowns.every(d => userObj[d.id] === d.correct);
+          if (allCorrect) {
+            isCorrect = true;
+          }
         } else if ((q.type === "short" || q.type === "essay") && typeof q.checkAnswer === "function") {
           isCorrect = q.checkAnswer(userVal);
         }
@@ -1433,6 +1678,31 @@ class WorksheetApp {
             label.classList.add("is-wrong-answer");
           }
         });
+      } else if (q.type === "dropdown") {
+        const userObj = (typeof userVal === "object" && userVal !== null) ? userVal : {};
+        let allCorrect = true;
+
+        q.dropdowns.forEach(d => {
+          const sel = card.querySelector(`select[data-blank-id="${d.id}"]`);
+          if (!sel) return;
+          const chosen = userObj[d.id];
+          const wrapper = sel.closest(".inline-select-wrapper");
+
+          if (chosen === d.correct) {
+            sel.classList.add("is-correct-dropdown");
+          } else {
+            allCorrect = false;
+            sel.classList.add("is-wrong-dropdown");
+            if (wrapper && !wrapper.querySelector(".dropdown-correct-callout")) {
+              const callout = document.createElement("span");
+              callout.className = "dropdown-correct-callout";
+              callout.textContent = `✓ ${d.correct}`;
+              wrapper.appendChild(callout);
+            }
+          }
+        });
+
+        isCorrect = allCorrect;
       } else if ((q.type === "short" || q.type === "essay") && typeof q.checkAnswer === "function") {
         isCorrect = userVal ? q.checkAnswer(userVal) : false;
       }
