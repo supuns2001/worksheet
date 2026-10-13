@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SmartWorksheet - Interactive Math & Science Learning Platform</title>
-  <meta name="description" content="Interactive, randomized educational worksheet for Mathematics and Science with instant grading, progress tracking, and printable format.">
+  <title>QuestMaster - Interactive Worksheet & Proctoring Assessment</title>
+  <meta name="description" content="Interactive educational worksheet with configurable proctoring, tab tracking, anti-cheating controls, auto-grading, and real-time security logging.">
   
   <!-- Modern Typography from Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   
   <link rel="stylesheet" href="style.css">
 </head>
@@ -19,13 +19,254 @@
   <div class="ambient-glow glow-2"></div>
   <div class="ambient-glow glow-3"></div>
 
-  <div class="app-container">
+  <!-- ========================================================
+       SCREEN 1: ASSESSMENT SECURITY & PROCTORING SETTINGS
+       ======================================================== -->
+  <div class="settings-screen" id="settingsScreen">
+    <div class="settings-container">
+      <!-- Settings Header -->
+      <div class="settings-header">
+        <div class="settings-brand">
+          <div class="logo-icon">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+          </div>
+          <div>
+            <h1 class="settings-title">Assessment Security & Proctoring Setup</h1>
+            <p class="settings-subtitle">Configure and test anti-cheating protection rules before launching the worksheet.</p>
+          </div>
+        </div>
+
+        <!-- Quick Presets -->
+        <div class="preset-group">
+          <span class="preset-label">Quick Presets:</span>
+          <button class="btn btn-preset" id="presetTestingBtn" title="Turn all protections off for sandbox testing">
+            🛠️ Sandbox (All OFF)
+          </button>
+          <button class="btn btn-preset" id="presetStandardBtn" title="Basic recommended protections">
+            🟡 Standard Quiz
+          </button>
+          <button class="btn btn-preset active" id="presetStrictBtn" title="Full strict proctoring with all rules enabled">
+            🔴 Strict Exam (All ON)
+          </button>
+        </div>
+      </div>
+
+      <!-- Security Feature Toggles Grid -->
+      <div class="security-toggles-grid">
+        <!-- Feature 1: Tab Switch Tracking -->
+        <div class="security-card">
+          <div class="security-card-header">
+            <div class="security-icon-wrap icon-purple">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                <line x1="8" y1="21" x2="16" y2="21"></line>
+                <line x1="12" y1="17" x2="12" y2="21"></line>
+              </svg>
+            </div>
+            <div class="security-title-wrap">
+              <h3 class="security-card-title">1. Tab Switch Tracking</h3>
+              <span class="security-api-badge">Page Visibility API</span>
+            </div>
+            <label class="switch-control" for="toggleTabSwitch">
+              <input type="checkbox" id="toggleTabSwitch" checked>
+              <span class="slider-round"></span>
+            </label>
+          </div>
+          <p class="security-card-desc">
+            Detects when the student switches away to another browser tab or minimizes the window. Accurately calculates and logs the total duration (seconds) spent outside the test tab.
+          </p>
+        </div>
+
+        <!-- Feature 2: Window Blur Tracking -->
+        <div class="security-card">
+          <div class="security-card-header">
+            <div class="security-icon-wrap icon-cyan">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="9" y1="3" x2="9" y2="21"></line>
+              </svg>
+            </div>
+            <div class="security-title-wrap">
+              <h3 class="security-card-title">2. Window Blur Tracking</h3>
+              <span class="security-api-badge">Window Focus / Blur</span>
+            </div>
+            <label class="switch-control" for="toggleWindowBlur">
+              <input type="checkbox" id="toggleWindowBlur" checked>
+              <span class="slider-round"></span>
+            </label>
+          </div>
+          <p class="security-card-desc">
+            Detects when the browser window loses focus to external desktop software (such as ChatGPT, Notepad, Discord, split-screen windows, or secondary monitors).
+          </p>
+        </div>
+
+        <!-- Feature 3: Disable Right-Click -->
+        <div class="security-card">
+          <div class="security-card-header">
+            <div class="security-icon-wrap icon-rose">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="5" y="2" width="14" height="20" rx="7"></rect>
+                <line x1="12" y1="6" x2="12" y2="10"></line>
+              </svg>
+            </div>
+            <div class="security-title-wrap">
+              <h3 class="security-card-title">3. Disable Right-Click</h3>
+              <span class="security-api-badge">Context Menu Lock</span>
+            </div>
+            <label class="switch-control" for="toggleRightClick">
+              <input type="checkbox" id="toggleRightClick" checked>
+              <span class="slider-round"></span>
+            </label>
+          </div>
+          <p class="security-card-desc">
+            Completely disables the browser's mouse right-click pop-up menu, preventing students from using "Inspect Element", "View Source", or right-click web searches.
+          </p>
+        </div>
+
+        <!-- Feature 4: Block Copy, Cut & Paste -->
+        <div class="security-card">
+          <div class="security-card-header">
+            <div class="security-icon-wrap icon-amber">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+              </svg>
+            </div>
+            <div class="security-title-wrap">
+              <h3 class="security-card-title">4. Block Copy & Paste</h3>
+              <span class="security-api-badge">Clipboard API Shield</span>
+            </div>
+            <label class="switch-control" for="toggleCopyPaste">
+              <input type="checkbox" id="toggleCopyPaste" checked>
+              <span class="slider-round"></span>
+            </label>
+          </div>
+          <p class="security-card-desc">
+            Restricts clipboard access so students cannot copy exam questions to search engines or paste pre-written solutions into short or essay answer boxes.
+          </p>
+        </div>
+
+        <!-- Feature 5: Enforce Fullscreen Mode -->
+        <div class="security-card">
+          <div class="security-card-header">
+            <div class="security-icon-wrap icon-emerald">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+              </svg>
+            </div>
+            <div class="security-title-wrap">
+              <h3 class="security-card-title">5. Enforce Fullscreen Mode</h3>
+              <span class="security-api-badge">Fullscreen API</span>
+            </div>
+            <label class="switch-control" for="toggleFullscreen">
+              <input type="checkbox" id="toggleFullscreen" checked>
+              <span class="slider-round"></span>
+            </label>
+          </div>
+          <p class="security-card-desc">
+            Forces the assessment into immersive full-screen mode upon start. Exiting full-screen (e.g., pressing Esc or resizing window) triggers an immediate security alert.
+          </p>
+        </div>
+
+        <!-- Feature 6: Block DevTools & Shortcuts -->
+        <div class="security-card">
+          <div class="security-card-header">
+            <div class="security-icon-wrap icon-indigo">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="16 18 22 12 16 6"></polyline>
+                <polyline points="8 6 2 12 8 18"></polyline>
+              </svg>
+            </div>
+            <div class="security-title-wrap">
+              <h3 class="security-card-title">6. Block DevTools Shortcuts</h3>
+              <span class="security-api-badge">Keyboard Interceptor</span>
+            </div>
+            <label class="switch-control" for="toggleDevTools">
+              <input type="checkbox" id="toggleDevTools" checked>
+              <span class="slider-round"></span>
+            </label>
+          </div>
+          <p class="security-card-desc">
+            Intercepts and blocks developer keys like F12, Ctrl+Shift+I (Inspect), Ctrl+Shift+J (Console), and Ctrl+U (View Page Source).
+          </p>
+        </div>
+
+        <!-- Feature 7: 3-Strike Auto-Submission -->
+        <div class="security-card">
+          <div class="security-card-header">
+            <div class="security-icon-wrap icon-crimson">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                <line x1="12" y1="9" x2="12" y2="13"></line>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+              </svg>
+            </div>
+            <div class="security-title-wrap">
+              <h3 class="security-card-title">7. 3-Strike Auto-Submission</h3>
+              <span class="security-api-badge">Disqualification Rule</span>
+            </div>
+            <label class="switch-control" for="toggleThreeStrikes">
+              <input type="checkbox" id="toggleThreeStrikes" checked>
+              <span class="slider-round"></span>
+            </label>
+          </div>
+          <p class="security-card-desc">
+            Enforces a 3-strike penalty system (Strike 1: Warning, Strike 2: Severe Warning, Strike 3: Disqualification). Auto-submits the worksheet upon 3 rule violations.
+          </p>
+        </div>
+
+        <!-- Feature 8: Live Security Audit Log Console -->
+        <div class="security-card">
+          <div class="security-card-header">
+            <div class="security-icon-wrap icon-blue">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="4 17 10 11 4 5"></polyline>
+                <line x1="12" y1="19" x2="20" y2="19"></line>
+              </svg>
+            </div>
+            <div class="security-title-wrap">
+              <h3 class="security-card-title">8. Live Security Audit Log</h3>
+              <span class="security-api-badge">Real-time Test Console</span>
+            </div>
+            <label class="switch-control" for="toggleLiveConsole">
+              <input type="checkbox" id="toggleLiveConsole" checked>
+              <span class="slider-round"></span>
+            </label>
+          </div>
+          <p class="security-card-desc">
+            Displays an interactive floating console at the bottom-right of the worksheet, logging every security event, tab switch, and duration in real time for effortless testing.
+          </p>
+        </div>
+      </div>
+
+      <!-- Settings Launch Action -->
+      <div class="settings-action-bar">
+        <div class="active-summary">
+          <span class="pulse-indicator"></span>
+          <span id="activeRulesSummaryText">8 of 8 security protections armed</span>
+        </div>
+        <button class="btn btn-primary btn-launch" id="startAssessmentBtn">
+          <span>🚀 Launch Worksheet with Selected Security</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       SCREEN 2: MAIN ASSESSMENT WORKSHEET
+       ======================================================== -->
+  <div class="app-container" id="worksheetView" style="display: none;">
     <!-- Top Navigation & Header -->
     <header class="app-header">
       <div class="header-left">
         <div class="brand-logo">
           <div class="logo-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
               <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
             </svg>
           </div>
@@ -46,11 +287,19 @@
           <span id="timerText">00:00</span>
         </div>
 
+        <button class="btn btn-secondary" id="reconfigureBtn" title="Back to security settings page">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+          <span>⚙️ Settings</span>
+        </button>
+
         <button class="btn btn-secondary" id="shuffleBtn" title="Reshuffle all questions and options randomly">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
             <path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/>
           </svg>
-          <span>Shuffle Questions</span>
+          <span>Shuffle</span>
         </button>
 
         <button class="btn btn-secondary" id="printBtn" title="Print as physical paper worksheet">
@@ -70,17 +319,22 @@
         <div class="stats-meta">
           <div class="meta-item">
             <span class="meta-label">Total Questions</span>
-            <span class="meta-value" id="totalQuestionsCount">14</span>
+            <span class="meta-value" id="totalQuestionsCount">20</span>
           </div>
           <div class="meta-divider"></div>
           <div class="meta-item">
             <span class="meta-label">Answered</span>
-            <span class="meta-value answered-highlight" id="answeredCount">0 / 14</span>
+            <span class="meta-value answered-highlight" id="answeredCount">0 / 20</span>
           </div>
           <div class="meta-divider"></div>
           <div class="meta-item">
-            <span class="meta-label">Mode</span>
-            <span class="meta-value badge-pill">Randomized Order</span>
+            <span class="meta-label">Security Mode</span>
+            <span class="meta-value badge-pill" id="securityBadgeText">Proctored Active</span>
+          </div>
+          <div class="meta-divider"></div>
+          <div class="meta-item" id="strikeMetaItem">
+            <span class="meta-label">Strikes Incurred</span>
+            <span class="meta-value strike-count" id="headerStrikeCount">0 / 3</span>
           </div>
         </div>
 
@@ -111,7 +365,6 @@
 
     <!-- Main Questions Container -->
     <main class="worksheet-main" id="worksheetContainer">
-      <!-- Questions will be dynamically rendered here with full shuffle -->
       <div class="loading-state">
         <div class="spinner"></div>
         <p>Loading randomized questions...</p>
@@ -138,9 +391,40 @@
     </footer>
   </div>
 
-  <!-- Score & Review Modal -->
+  <!-- ========================================================
+       FLOATING LIVE SECURITY AUDIT LOG CONSOLE (DRAWER)
+       ======================================================== -->
+  <aside class="security-drawer" id="securityDrawer" style="display: none;">
+    <div class="drawer-header" id="drawerHeaderToggle">
+      <div class="drawer-title">
+        <div class="drawer-status-dot"></div>
+        <span>🛡️ Security Audit Console</span>
+      </div>
+      <div class="drawer-badges">
+        <span class="drawer-badge badge-strikes" id="drawerStrikeBadge">Strikes: 0/3</span>
+        <span class="drawer-badge badge-events" id="drawerEventCount">0 Events</span>
+        <button class="drawer-toggle-btn" id="drawerMinimizeBtn" aria-label="Toggle drawer">−</button>
+      </div>
+    </div>
+    <div class="drawer-body" id="drawerBody">
+      <div class="log-stream" id="logStreamContainer">
+        <div class="log-entry log-entry-info">
+          <span class="log-time">[System]</span>
+          <span class="log-msg">Audit monitoring initialized. Events will stream here.</span>
+        </div>
+      </div>
+      <div class="drawer-footer">
+        <button class="btn-xs btn-clear-log" id="clearLogsBtn">Clear Display</button>
+        <span class="log-caption">Real-time Proctoring Stream</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ========================================================
+       SCORE & SECURITY INTEGRITY RESULTS MODAL
+       ======================================================== -->
   <div class="modal-overlay" id="resultsModal" aria-hidden="true">
-    <div class="modal-card">
+    <div class="modal-card modal-large">
       <button class="modal-close-btn" id="closeModalBtn" aria-label="Close modal">&times;</button>
       
       <div class="modal-badge-wrapper">
@@ -148,31 +432,62 @@
       </div>
 
       <h2 class="modal-title" id="resultsTitle">Worksheet Completed!</h2>
-      <p class="modal-subtitle" id="resultsFeedback">Great job! Here is your performance breakdown.</p>
+      <p class="modal-subtitle" id="resultsFeedback">Great job! Here is your performance and security breakdown.</p>
 
+      <!-- Score Breakdown -->
       <div class="score-grid">
         <div class="score-card main-score">
           <span class="score-label">Final Score</span>
           <div class="score-val-wrap">
             <span class="score-number" id="finalScoreText">0</span>
-            <span class="score-max" id="maxScoreText">/ 14</span>
+            <span class="score-max" id="maxScoreText">/ 20</span>
           </div>
           <span class="score-percent" id="finalPercentText">0%</span>
         </div>
 
         <div class="score-card">
           <span class="score-label">📐 Mathematics</span>
-          <span class="score-sub-val" id="mathScoreText">0 / 7</span>
+          <span class="score-sub-val" id="mathScoreText">0 / 10</span>
         </div>
 
         <div class="score-card">
           <span class="score-label">🔬 Science</span>
-          <span class="score-sub-val" id="scienceScoreText">0 / 7</span>
+          <span class="score-sub-val" id="scienceScoreText">0 / 10</span>
         </div>
       </div>
 
+      <!-- Academic Integrity Audit Card -->
+      <div class="integrity-audit-card" id="integrityCard">
+        <div class="integrity-header">
+          <div class="integrity-title-wrap">
+            <span class="integrity-icon" id="integrityStatusIcon">🟢</span>
+            <div>
+              <h4 class="integrity-title" id="integrityStatusTitle">Academic Integrity Status: Clean</h4>
+              <p class="integrity-subtitle" id="integrityStatusSubtitle">No suspicious window or clipboard actions detected during session.</p>
+            </div>
+          </div>
+          <div class="integrity-stats">
+            <div class="stat-bubble">
+              <span class="stat-num" id="totalViolationsCount">0</span>
+              <span class="stat-lbl">Violations</span>
+            </div>
+            <div class="stat-bubble">
+              <span class="stat-num" id="finalStrikesCount">0 / 3</span>
+              <span class="stat-lbl">Strikes</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Scrollable Incident Log -->
+        <div class="incident-log-box" id="modalIncidentLog">
+          <div class="empty-log-msg">No security violations recorded for this assessment attempt.</div>
+        </div>
+      </div>
+
+      <!-- Modal Action Buttons -->
       <div class="modal-actions">
         <button class="btn btn-secondary" id="reviewAnswersBtn">Review Detailed Answers</button>
+        <button class="btn btn-outline" id="returnToSettingsBtn">⚙️ Change Settings & Test</button>
         <button class="btn btn-primary" id="retryWorksheetBtn">Try Again (New Shuffle)</button>
       </div>
     </div>
