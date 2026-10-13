@@ -1,8 +1,8 @@
 /**
  * QuestMaster Worksheet - Core Application Logic
- * Senior Frontend Architecture with Fisher-Yates Randomization,
- * Dynamic State Tracking, Radio Buttons, Multi-Select Checkboxes,
- * Short Answers, ~20 Words Long Answers with Live Word Counter & Auto-Grading.
+ * Senior Frontend Architecture with Configurable Security & Proctoring Engine,
+ * Page Visibility API, Window Blur Tracking, Context Menu Blocker, Clipboard Shield,
+ * Fullscreen Enforcement, DevTools Shield, 3-Strike Rule, Live Audit Console & Fisher-Yates Shuffling.
  */
 
 // Master Question Database
@@ -359,7 +359,7 @@ const QUESTIONS_DATABASE = [
   }
 ];
 
-// App State Management
+// App State & Security Proctoring Management
 class WorksheetApp {
   constructor() {
     this.currentQuestions = [];
@@ -369,34 +369,473 @@ class WorksheetApp {
     this.timerInterval = null;
     this.currentFilter = "all";
 
-    // DOM Elements
+    // Security & Proctoring State
+    this.securityConfig = {
+      tabSwitch: true,
+      windowBlur: true,
+      rightClick: true,
+      copyPaste: true,
+      fullscreen: true,
+      devTools: true,
+      threeStrikes: true,
+      liveConsole: true
+    };
+
+    this.incidentLog = [];
+    this.strikes = 0;
+    this.totalViolations = 0;
+    this.tabSwitchOutTime = null;
+    this.isWorksheetActive = false;
+
+    // DOM Elements - Screens
+    this.settingsScreen = document.getElementById("settingsScreen");
+    this.worksheetView = document.getElementById("worksheetView");
+
+    // DOM Elements - Settings Toggles
+    this.toggleTabSwitch = document.getElementById("toggleTabSwitch");
+    this.toggleWindowBlur = document.getElementById("toggleWindowBlur");
+    this.toggleRightClick = document.getElementById("toggleRightClick");
+    this.toggleCopyPaste = document.getElementById("toggleCopyPaste");
+    this.toggleFullscreen = document.getElementById("toggleFullscreen");
+    this.toggleDevTools = document.getElementById("toggleDevTools");
+    this.toggleThreeStrikes = document.getElementById("toggleThreeStrikes");
+    this.toggleLiveConsole = document.getElementById("toggleLiveConsole");
+
+    this.presetTestingBtn = document.getElementById("presetTestingBtn");
+    this.presetStandardBtn = document.getElementById("presetStandardBtn");
+    this.presetStrictBtn = document.getElementById("presetStrictBtn");
+    this.startAssessmentBtn = document.getElementById("startAssessmentBtn");
+    this.activeRulesSummaryText = document.getElementById("activeRulesSummaryText");
+
+    // DOM Elements - Worksheet
     this.container = document.getElementById("worksheetContainer");
     this.progressBar = document.getElementById("progressBar");
     this.progressPercentage = document.getElementById("progressPercentage");
     this.answeredCountElem = document.getElementById("answeredCount");
     this.totalQuestionsCountElem = document.getElementById("totalQuestionsCount");
     this.timerTextElem = document.getElementById("timerText");
+    this.securityBadgeText = document.getElementById("securityBadgeText");
+    this.headerStrikeCount = document.getElementById("headerStrikeCount");
+    this.strikeMetaItem = document.getElementById("strikeMetaItem");
+
+    this.reconfigureBtn = document.getElementById("reconfigureBtn");
     this.shuffleBtn = document.getElementById("shuffleBtn");
     this.printBtn = document.getElementById("printBtn");
     this.clearAnswersBtn = document.getElementById("clearAnswersBtn");
     this.submitWorksheetBtn = document.getElementById("submitWorksheetBtn");
+
+    // DOM Elements - Live Security Drawer
+    this.securityDrawer = document.getElementById("securityDrawer");
+    this.drawerHeaderToggle = document.getElementById("drawerHeaderToggle");
+    this.drawerMinimizeBtn = document.getElementById("drawerMinimizeBtn");
+    this.drawerStrikeBadge = document.getElementById("drawerStrikeBadge");
+    this.drawerEventCount = document.getElementById("drawerEventCount");
+    this.logStreamContainer = document.getElementById("logStreamContainer");
+    this.clearLogsBtn = document.getElementById("clearLogsBtn");
+
+    // DOM Elements - Results Modal & Integrity Audit
     this.resultsModal = document.getElementById("resultsModal");
     this.closeModalBtn = document.getElementById("closeModalBtn");
     this.reviewAnswersBtn = document.getElementById("reviewAnswersBtn");
+    this.returnToSettingsBtn = document.getElementById("returnToSettingsBtn");
     this.retryWorksheetBtn = document.getElementById("retryWorksheetBtn");
+    this.integrityStatusIcon = document.getElementById("integrityStatusIcon");
+    this.integrityStatusTitle = document.getElementById("integrityStatusTitle");
+    this.integrityStatusSubtitle = document.getElementById("integrityStatusSubtitle");
+    this.totalViolationsCount = document.getElementById("totalViolationsCount");
+    this.finalStrikesCount = document.getElementById("finalStrikesCount");
+    this.modalIncidentLog = document.getElementById("modalIncidentLog");
 
     this.init();
   }
 
   init() {
-    this.bindEvents();
+    this.initSettingsScreen();
+    this.bindWorksheetEvents();
+    this.bindSecurityListeners();
+  }
+
+  // ========================================================
+  // SETTINGS & CONFIGURATION ENGINE
+  // ========================================================
+  initSettingsScreen() {
+    const allToggles = [
+      { el: this.toggleTabSwitch, key: "tabSwitch" },
+      { el: this.toggleWindowBlur, key: "windowBlur" },
+      { el: this.toggleRightClick, key: "rightClick" },
+      { el: this.toggleCopyPaste, key: "copyPaste" },
+      { el: this.toggleFullscreen, key: "fullscreen" },
+      { el: this.toggleDevTools, key: "devTools" },
+      { el: this.toggleThreeStrikes, key: "threeStrikes" },
+      { el: this.toggleLiveConsole, key: "liveConsole" }
+    ];
+
+    // Toggle event listener
+    allToggles.forEach(item => {
+      item.el.addEventListener("change", () => {
+        this.securityConfig[item.key] = item.el.checked;
+        this.updatePresetButtonsState();
+        this.updateRulesSummary();
+      });
+    });
+
+    // Presets Handlers
+    this.presetTestingBtn.addEventListener("click", () => {
+      this.applyPreset({
+        tabSwitch: false,
+        windowBlur: false,
+        rightClick: false,
+        copyPaste: false,
+        fullscreen: false,
+        devTools: false,
+        threeStrikes: false,
+        liveConsole: true // keep console on so they can verify nothing is blocked
+      });
+      this.setActivePresetBtn(this.presetTestingBtn);
+    });
+
+    this.presetStandardBtn.addEventListener("click", () => {
+      this.applyPreset({
+        tabSwitch: true,
+        windowBlur: false,
+        rightClick: true,
+        copyPaste: true,
+        fullscreen: false,
+        devTools: true,
+        threeStrikes: false,
+        liveConsole: true
+      });
+      this.setActivePresetBtn(this.presetStandardBtn);
+    });
+
+    this.presetStrictBtn.addEventListener("click", () => {
+      this.applyPreset({
+        tabSwitch: true,
+        windowBlur: true,
+        rightClick: true,
+        copyPaste: true,
+        fullscreen: true,
+        devTools: true,
+        threeStrikes: true,
+        liveConsole: true
+      });
+      this.setActivePresetBtn(this.presetStrictBtn);
+    });
+
+    // Launch Assessment Action
+    this.startAssessmentBtn.addEventListener("click", () => {
+      this.launchAssessment();
+    });
+
+    // Reconfigure Action (Back to settings from worksheet)
+    this.reconfigureBtn.addEventListener("click", () => {
+      if (!this.isSubmitted && Object.keys(this.userAnswers).length > 0) {
+        if (!confirm("Returning to settings will pause and reset current assessment progress. Continue?")) {
+          return;
+        }
+      }
+      this.returnToSettings();
+    });
+
+    this.returnToSettingsBtn.addEventListener("click", () => {
+      this.closeModal();
+      this.returnToSettings();
+    });
+
+    this.updateRulesSummary();
+  }
+
+  applyPreset(config) {
+    this.securityConfig = { ...config };
+    this.toggleTabSwitch.checked = config.tabSwitch;
+    this.toggleWindowBlur.checked = config.windowBlur;
+    this.toggleRightClick.checked = config.rightClick;
+    this.toggleCopyPaste.checked = config.copyPaste;
+    this.toggleFullscreen.checked = config.fullscreen;
+    this.toggleDevTools.checked = config.devTools;
+    this.toggleThreeStrikes.checked = config.threeStrikes;
+    this.toggleLiveConsole.checked = config.liveConsole;
+    this.updateRulesSummary();
+  }
+
+  setActivePresetBtn(btn) {
+    [this.presetTestingBtn, this.presetStandardBtn, this.presetStrictBtn].forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+  }
+
+  updatePresetButtonsState() {
+    const vals = Object.values(this.securityConfig);
+    const trueCount = vals.filter(Boolean).length;
+    [this.presetTestingBtn, this.presetStandardBtn, this.presetStrictBtn].forEach(b => b.classList.remove("active"));
+
+    if (trueCount === vals.length) {
+      this.presetStrictBtn.classList.add("active");
+    } else if (trueCount <= 1 && !this.securityConfig.tabSwitch && !this.securityConfig.rightClick) {
+      this.presetTestingBtn.classList.add("active");
+    }
+  }
+
+  updateRulesSummary() {
+    const activeCount = Object.values(this.securityConfig).filter(Boolean).length;
+    this.activeRulesSummaryText.textContent = `${activeCount} of 8 security protections armed`;
+  }
+
+  launchAssessment() {
+    // 1. Request fullscreen if enabled
+    if (this.securityConfig.fullscreen) {
+      if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen().catch(err => {
+          console.warn("Fullscreen permission notice:", err);
+        });
+      }
+    }
+
+    // 2. Switch Views
+    this.settingsScreen.style.display = "none";
+    this.worksheetView.style.display = "block";
+    window.scrollTo({ top: 0, behavior: "smooth" });
+
+    // 3. Configure Floating Drawer visibility
+    if (this.securityConfig.liveConsole) {
+      this.securityDrawer.style.display = "flex";
+    } else {
+      this.securityDrawer.style.display = "none";
+    }
+
+    // 4. Configure Strike UI
+    if (!this.securityConfig.threeStrikes) {
+      this.strikeMetaItem.style.display = "none";
+      this.drawerStrikeBadge.style.display = "none";
+    } else {
+      this.strikeMetaItem.style.display = "flex";
+      this.drawerStrikeBadge.style.display = "inline-block";
+    }
+
+    // 5. Update header security badge
+    const activeCount = Object.values(this.securityConfig).filter(Boolean).length;
+    if (activeCount === 0) {
+      this.securityBadgeText.textContent = "Unrestricted Mode";
+      this.securityBadgeText.style.borderColor = "#94a3b8";
+      this.securityBadgeText.style.color = "#94a3b8";
+    } else if (activeCount >= 7) {
+      this.securityBadgeText.textContent = "Strict Proctored";
+      this.securityBadgeText.style.borderColor = "rgba(244, 63, 94, 0.4)";
+      this.securityBadgeText.style.color = "#fda4af";
+    } else {
+      this.securityBadgeText.textContent = `${activeCount} Protections Active`;
+    }
+
+    // 6. Reset assessment & security states
+    this.isWorksheetActive = true;
+    this.incidentLog = [];
+    this.strikes = 0;
+    this.totalViolations = 0;
+    this.headerStrikeCount.textContent = "0 / 3";
+    this.drawerStrikeBadge.textContent = "Strikes: 0/3";
+    this.drawerEventCount.textContent = "0 Events";
+    this.logStreamContainer.innerHTML = `
+      <div class="log-entry log-entry-info">
+        <span class="log-time">[System]</span>
+        <span class="log-msg">Assessment launched. ${activeCount} security rules active.</span>
+      </div>
+    `;
+
+    // 7. Load & Shuffle Questions
     this.startTimer();
     this.loadAndShuffleWorksheet();
   }
 
-  /**
-   * Fisher-Yates Shuffling Algorithm
-   */
+  returnToSettings() {
+    this.isWorksheetActive = false;
+    clearInterval(this.timerInterval);
+    if (document.fullscreenElement && document.exitFullscreen) {
+      document.exitFullscreen().catch(() => {});
+    }
+    this.worksheetView.style.display = "none";
+    this.securityDrawer.style.display = "none";
+    this.settingsScreen.style.display = "flex";
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  // ========================================================
+  // ACTIVE PROCTORING & INTEGRITY ENGINE
+  // ========================================================
+  bindSecurityListeners() {
+    // 1. Tab Switch Tracking (Page Visibility API)
+    document.addEventListener("visibilitychange", () => {
+      if (!this.isWorksheetActive || this.isSubmitted || !this.securityConfig.tabSwitch) return;
+
+      if (document.hidden) {
+        this.tabSwitchOutTime = Date.now();
+        this.logSecurityEvent("TAB_SWITCH_OUT", "User switched away from assessment tab", "warn");
+      } else {
+        const durationAway = this.tabSwitchOutTime ? Math.round((Date.now() - this.tabSwitchOutTime) / 1000) : 0;
+        this.logSecurityEvent(
+          "TAB_SWITCH_IN",
+          `User returned to worksheet tab (Away for ${durationAway}s)`,
+          "danger",
+          durationAway
+        );
+        this.showToast(`⚠️ Warning: Tab switch detected! (Away for ${durationAway}s)`);
+        this.recordStrike("Tab Switch Violation");
+      }
+    });
+
+    // 2. Window Blur Tracking (App Loss Detection)
+    window.addEventListener("blur", () => {
+      if (!this.isWorksheetActive || this.isSubmitted || !this.securityConfig.windowBlur) return;
+      // If document is already hidden, visibilitychange handles it
+      if (!document.hidden) {
+        this.logSecurityEvent("WINDOW_BLUR", "Browser window lost focus to external app / screen", "warn");
+        this.showToast("⚠️ Notice: Browser window lost focus!");
+        this.recordStrike("Window Focus Loss");
+      }
+    });
+
+    window.addEventListener("focus", () => {
+      if (!this.isWorksheetActive || this.isSubmitted || !this.securityConfig.windowBlur) return;
+      if (!document.hidden) {
+        this.logSecurityEvent("WINDOW_FOCUS", "Browser window regained focus", "info");
+      }
+    });
+
+    // 3. Right-Click Prevention (Context Menu)
+    document.addEventListener("contextmenu", (e) => {
+      if (!this.isWorksheetActive || this.isSubmitted || !this.securityConfig.rightClick) return;
+      e.preventDefault();
+      this.logSecurityEvent("RIGHT_CLICK", "Attempted to open right-click context menu", "warn");
+      this.showToast("🚫 Right-click is disabled during assessment!");
+      this.recordStrike("Right-Click Blocked");
+    });
+
+    // 4. Clipboard Protection (Copy / Cut / Paste)
+    ["copy", "cut", "paste"].forEach(evtName => {
+      document.addEventListener(evtName, (e) => {
+        if (!this.isWorksheetActive || this.isSubmitted || !this.securityConfig.copyPaste) return;
+        // Allow paste only inside input fields if user chooses, but block copy entirely
+        if (evtName === "copy" || evtName === "cut") {
+          e.preventDefault();
+          this.logSecurityEvent("CLIPBOARD", `Prohibited ${evtName.toUpperCase()} action on assessment content`, "warn");
+          this.showToast(`🚫 ${evtName.toUpperCase()} is disabled on worksheet!`);
+          this.recordStrike("Clipboard Action Blocked");
+        } else if (evtName === "paste") {
+          // Check if pasted in normal input
+          const target = e.target;
+          if (!target || (!target.classList.contains("text-input-field") && !target.classList.contains("textarea-field"))) {
+            e.preventDefault();
+            this.logSecurityEvent("CLIPBOARD", "Prohibited PASTE action blocked", "warn");
+            this.showToast("🚫 Pasting is restricted!");
+            this.recordStrike("Paste Action Blocked");
+          }
+        }
+      });
+    });
+
+    // 5. Developer Tools & Shortcuts Interception
+    document.addEventListener("keydown", (e) => {
+      if (!this.isWorksheetActive || this.isSubmitted || !this.securityConfig.devTools) return;
+
+      const isF12 = e.key === "F12" || e.keyCode === 123;
+      const isInspect = (e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === "I" || e.key === "i" || e.key === "J" || e.key === "j" || e.key === "C" || e.key === "c");
+      const isViewSource = (e.ctrlKey || e.metaKey) && (e.key === "U" || e.key === "u");
+      const isCopyShortcut = (e.ctrlKey || e.metaKey) && (e.key === "C" || e.key === "c") && !window.getSelection().isCollapsed && this.securityConfig.copyPaste;
+
+      if (isF12 || isInspect || isViewSource || isCopyShortcut) {
+        e.preventDefault();
+        const actionDesc = isF12 ? "F12 DevTools" : isInspect ? "Inspect Element shortcut" : isViewSource ? "View Page Source" : "Copy shortcut";
+        this.logSecurityEvent("DEVTOOLS_SHORTCUT", `Blocked keyboard shortcut: ${actionDesc}`, "danger");
+        this.showToast(`🚫 Shortcut blocked: ${actionDesc}`);
+        this.recordStrike(`Shortcut Blocked (${actionDesc})`);
+      }
+    });
+
+    // 6. Fullscreen Mode Change Enforcement
+    document.addEventListener("fullscreenchange", () => {
+      if (!this.isWorksheetActive || this.isSubmitted || !this.securityConfig.fullscreen) return;
+      if (!document.fullscreenElement) {
+        this.logSecurityEvent("FULLSCREEN_EXIT", "User exited enforced full-screen mode", "danger");
+        this.showToast("⚠️ Alert: You exited fullscreen mode!");
+        this.recordStrike("Fullscreen Exit Violation");
+
+        // Offer re-entry
+        setTimeout(() => {
+          if (!document.fullscreenElement && this.isWorksheetActive && !this.isSubmitted) {
+            if (confirm("Enforced fullscreen mode required. Click OK to re-enter fullscreen.")) {
+              document.documentElement.requestFullscreen().catch(() => {});
+            }
+          }
+        }, 300);
+      }
+    });
+
+    // Drawer minimize / expand
+    this.drawerHeaderToggle.addEventListener("click", () => {
+      this.securityDrawer.classList.toggle("minimized");
+      this.drawerMinimizeBtn.textContent = this.securityDrawer.classList.contains("minimized") ? "+" : "−";
+    });
+
+    this.clearLogsBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      this.logStreamContainer.innerHTML = `
+        <div class="log-entry log-entry-info">
+          <span class="log-time">[Display]</span>
+          <span class="log-msg">Log display cleared. Total recorded: ${this.totalViolations}</span>
+        </div>
+      `;
+    });
+  }
+
+  logSecurityEvent(type, message, severity = "warn", duration = null) {
+    this.totalViolations++;
+    const now = new Date();
+    const timeString = now.toTimeString().split(" ")[0];
+
+    const incident = {
+      timestamp: now.toISOString(),
+      timeString,
+      type,
+      message,
+      severity,
+      duration
+    };
+
+    this.incidentLog.push(incident);
+
+    // Update Live Drawer UI
+    this.drawerEventCount.textContent = `${this.totalViolations} Events`;
+
+    const entryDiv = document.createElement("div");
+    const severityClass = severity === "danger" ? "log-entry-danger" : severity === "info" ? "log-entry-info" : "log-entry-warn";
+    entryDiv.className = `log-entry ${severityClass}`;
+    entryDiv.innerHTML = `
+      <span class="log-time">[${timeString}]</span>
+      <span class="log-msg"><strong>${type}:</strong> ${message}</span>
+    `;
+
+    this.logStreamContainer.appendChild(entryDiv);
+    this.logStreamContainer.scrollTop = this.logStreamContainer.scrollHeight;
+  }
+
+  recordStrike(reason) {
+    if (!this.securityConfig.threeStrikes) return;
+
+    this.strikes++;
+    this.headerStrikeCount.textContent = `${this.strikes} / 3`;
+    this.drawerStrikeBadge.textContent = `Strikes: ${this.strikes}/3`;
+
+    if (this.strikes === 1) {
+      this.showToast(`⚠️ Strike 1/3: ${reason}`);
+    } else if (this.strikes === 2) {
+      this.showToast(`🚨 Strike 2/3: Final warning! One more violation triggers auto-submission.`);
+    } else if (this.strikes >= 3) {
+      alert(`⛔ Assessment Terminated!\n\nYou have accumulated 3 security strikes (${reason}).\nThe worksheet will now be automatically submitted for grading.`);
+      this.evaluateAndSubmit(true);
+    }
+  }
+
+  // ========================================================
+  // CORE WORKSHEET & QUESTIONS MANAGEMENT
+  // ========================================================
   shuffleArray(array) {
     const shuffled = [...array];
     for (let i = shuffled.length - 1; i > 0; i--) {
@@ -406,11 +845,7 @@ class WorksheetApp {
     return shuffled;
   }
 
-  /**
-   * Initializes question order and options order
-   */
   loadAndShuffleWorksheet() {
-    // Deep clone questions
     const cloned = QUESTIONS_DATABASE.map(q => {
       const item = { ...q };
       if ((item.type === "radio" || item.type === "multi") && item.options) {
@@ -419,14 +854,10 @@ class WorksheetApp {
       return item;
     });
 
-    // Shuffle questions
     this.currentQuestions = this.shuffleArray(cloned);
-
-    // Reset answers
     this.userAnswers = {};
     this.isSubmitted = false;
 
-    // Update counts & render
     this.totalQuestionsCountElem.textContent = this.currentQuestions.length;
     this.renderWorksheet();
     this.updateProgress();
@@ -434,17 +865,11 @@ class WorksheetApp {
     this.showToast("🔀 Questions & Options successfully shuffled!");
   }
 
-  /**
-   * Count words in a string
-   */
   countWords(text) {
     if (!text) return 0;
     return text.trim().split(/\s+/).filter(Boolean).length;
   }
 
-  /**
-   * Render Questions based on active filter
-   */
   renderWorksheet() {
     this.container.innerHTML = "";
 
@@ -492,7 +917,6 @@ class WorksheetApp {
         typeLabel = "📝 ~20 Words Answer";
       }
 
-      // Card Header
       const headerHTML = `
         <div class="card-header">
           <div class="card-tags">
@@ -506,7 +930,6 @@ class WorksheetApp {
 
       let contentHTML = "";
 
-      // 1. Radio Button Format (Single Choice)
       if (q.type === "radio") {
         const optionLetters = ["A", "B", "C", "D", "E"];
         const selectedVal = this.userAnswers[q.id];
@@ -538,9 +961,7 @@ class WorksheetApp {
             }).join("")}
           </div>
         `;
-      } 
-      // 2. Multi-Select Checkboxes (Multiple Choices)
-      else if (q.type === "multi") {
+      } else if (q.type === "multi") {
         const optionLetters = ["A", "B", "C", "D", "E"];
         const selectedVals = this.userAnswers[q.id] || [];
 
@@ -583,9 +1004,7 @@ class WorksheetApp {
             }).join("")}
           </div>
         `;
-      } 
-      // 3. Short Answer (Single Line)
-      else if (q.type === "short") {
+      } else if (q.type === "short") {
         const userText = this.userAnswers[q.id] || "";
         contentHTML = `
           <div class="short-answer-group">
@@ -606,9 +1025,7 @@ class WorksheetApp {
             </div>
           </div>
         `;
-      }
-      // 4. ~20 Words Descriptive Essay (Textarea with live word count)
-      else if (q.type === "essay") {
+      } else if (q.type === "essay") {
         const userText = this.userAnswers[q.id] || "";
         const wordCount = this.countWords(userText);
         let badgeStatusClass = "";
@@ -637,7 +1054,6 @@ class WorksheetApp {
         `;
       }
 
-      // Feedback Explanation Box
       const feedbackHTML = `
         <div class="feedback-box" id="feedback_${q.id}">
           <div class="feedback-header">
@@ -657,9 +1073,6 @@ class WorksheetApp {
     }
   }
 
-  /**
-   * Helper to check if a question has been answered
-   */
   isQuestionAnswered(qId) {
     const val = this.userAnswers[qId];
     if (Array.isArray(val)) {
@@ -668,20 +1081,15 @@ class WorksheetApp {
     return val !== undefined && val !== null && val.toString().trim().length > 0;
   }
 
-  /**
-   * Event Listeners Binding
-   */
-  bindEvents() {
-    // 1. Radio Button Change Handler
+  bindWorksheetEvents() {
+    // Radio button changes
     this.container.addEventListener("change", (e) => {
       if (e.target && e.target.classList.contains("radio-option-input")) {
         const radio = e.target;
         const qId = radio.dataset.questionId;
         const card = document.getElementById(`card_${qId}`);
 
-        // Update card selected labels
-        const allLabels = card.querySelectorAll(".option-label");
-        allLabels.forEach(lbl => lbl.classList.remove("is-selected"));
+        card.querySelectorAll(".option-label").forEach(lbl => lbl.classList.remove("is-selected"));
         radio.closest(".option-label").classList.add("is-selected");
 
         this.userAnswers[qId] = radio.value;
@@ -690,7 +1098,7 @@ class WorksheetApp {
       }
     });
 
-    // 2. Multi-Select Checkbox Handler (Multiple Choices)
+    // Multi-select checkbox changes
     this.container.addEventListener("change", (e) => {
       if (e.target && e.target.classList.contains("multi-option-input")) {
         const checkbox = e.target;
@@ -722,7 +1130,7 @@ class WorksheetApp {
       }
     });
 
-    // 3. Short Answer Text Input Handler
+    // Short answer text inputs
     this.container.addEventListener("input", (e) => {
       if (e.target && e.target.classList.contains("text-input-field")) {
         const input = e.target;
@@ -742,7 +1150,7 @@ class WorksheetApp {
       }
     });
 
-    // 4. ~20 Words Textarea Input & Live Word Counter Handler
+    // ~20 words textarea input
     this.container.addEventListener("input", (e) => {
       if (e.target && e.target.classList.contains("textarea-field")) {
         const textarea = e.target;
@@ -751,7 +1159,6 @@ class WorksheetApp {
         const textVal = textarea.value;
         const words = this.countWords(textVal);
 
-        // Update word counter badge
         const badge = document.getElementById(`word_counter_${qId}`);
         if (badge) {
           badge.textContent = `Words: ${words} / ~20`;
@@ -775,7 +1182,7 @@ class WorksheetApp {
       }
     });
 
-    // 5. Category filter tabs
+    // Filter tabs
     document.querySelectorAll(".tab-btn").forEach(btn => {
       btn.addEventListener("click", () => {
         document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
@@ -785,23 +1192,23 @@ class WorksheetApp {
       });
     });
 
-    // 6. Shuffle Button
+    // Shuffle Button
     this.shuffleBtn.addEventListener("click", () => {
       const answeredCount = Object.keys(this.userAnswers).length;
       if (answeredCount > 0 && !this.isSubmitted) {
-        if (!confirm("Shuffling will reorder all questions and reset answers. Continue?")) {
+        if (!confirm("Shuffling will reorder questions and reset current progress. Continue?")) {
           return;
         }
       }
       this.loadAndShuffleWorksheet();
     });
 
-    // 7. Print Button
+    // Print
     this.printBtn.addEventListener("click", () => {
       window.print();
     });
 
-    // 8. Clear Answers
+    // Clear answers
     this.clearAnswersBtn.addEventListener("click", () => {
       if (confirm("Are you sure you want to reset all your answers?")) {
         this.userAnswers = {};
@@ -812,12 +1219,12 @@ class WorksheetApp {
       }
     });
 
-    // 9. Submit Worksheet
+    // Submit worksheet
     this.submitWorksheetBtn.addEventListener("click", () => {
-      this.evaluateAndSubmit();
+      this.evaluateAndSubmit(false);
     });
 
-    // 10. Modal Actions
+    // Modal buttons
     this.closeModalBtn.addEventListener("click", () => this.closeModal());
     this.reviewAnswersBtn.addEventListener("click", () => this.closeModal());
     this.retryWorksheetBtn.addEventListener("click", () => {
@@ -832,9 +1239,6 @@ class WorksheetApp {
     });
   }
 
-  /**
-   * Update completion progress bar and counters
-   */
   updateProgress() {
     const total = this.currentQuestions.length;
     let answered = 0;
@@ -859,17 +1263,14 @@ class WorksheetApp {
     }
   }
 
-  /**
-   * Grade all question types and show results
-   */
-  evaluateAndSubmit() {
+  evaluateAndSubmit(isDisqualified = false) {
     const total = this.currentQuestions.length;
     let answered = 0;
     this.currentQuestions.forEach(q => {
       if (this.isQuestionAnswered(q.id)) answered++;
     });
 
-    if (answered < total) {
+    if (!isDisqualified && answered < total) {
       const proceed = confirm(`You have answered ${answered} out of ${total} questions. Do you still want to submit?`);
       if (!proceed) return;
     }
@@ -891,15 +1292,12 @@ class WorksheetApp {
       let isCorrect = false;
 
       if (userVal !== undefined && userVal !== null) {
-        // 1. Radio single choice check
         if (q.type === "radio") {
           const correctOpt = q.options.find(o => o.isCorrect);
           if (correctOpt && userVal === correctOpt.text) {
             isCorrect = true;
           }
-        } 
-        // 2. Multi-select check (User must select ALL correct and NO incorrect)
-        else if (q.type === "multi") {
+        } else if (q.type === "multi") {
           const selected = Array.isArray(userVal) ? userVal : [];
           const correctTexts = q.options.filter(o => o.isCorrect).map(o => o.text);
           const hasAllCorrect = correctTexts.every(t => selected.includes(t));
@@ -907,9 +1305,7 @@ class WorksheetApp {
           if (hasAllCorrect && hasNoWrong && selected.length > 0) {
             isCorrect = true;
           }
-        }
-        // 3. Short & Essay check
-        else if ((q.type === "short" || q.type === "essay") && typeof q.checkAnswer === "function") {
+        } else if ((q.type === "short" || q.type === "essay") && typeof q.checkAnswer === "function") {
           isCorrect = q.checkAnswer(userVal);
         }
       }
@@ -921,7 +1317,7 @@ class WorksheetApp {
       }
     });
 
-    // Populate Modal
+    // Populate Academic Scores
     const percentage = Math.round((totalScore / total) * 100);
     document.getElementById("finalScoreText").textContent = totalScore;
     document.getElementById("maxScoreText").textContent = `/ ${total}`;
@@ -934,31 +1330,66 @@ class WorksheetApp {
     const title = document.getElementById("resultsTitle");
     const feedback = document.getElementById("resultsFeedback");
 
-    if (percentage >= 90) {
-      badge.textContent = "A+";
-      title.textContent = "Outstanding Mastery! 🌟";
-      feedback.textContent = "Superb performance across Radio, Multi-choice, Short, and ~20 Words answers!";
-    } else if (percentage >= 75) {
-      badge.textContent = "A";
-      title.textContent = "Great Job! 🎉";
-      feedback.textContent = "You demonstrated strong understanding across both Math and Science.";
-    } else if (percentage >= 50) {
-      badge.textContent = "B";
-      title.textContent = "Good Effort! 👍";
-      feedback.textContent = "Solid start! Take a look at the explanations below to refine your answers.";
+    if (isDisqualified) {
+      badge.textContent = "F";
+      badge.style.background = "linear-gradient(135deg, #ef4444 0%, #991b1b 100%)";
+      title.textContent = "Assessment Terminated (Strikes Exceeded)";
+      feedback.textContent = "Auto-submitted due to 3 accumulated security violations.";
     } else {
-      badge.textContent = "C";
-      title.textContent = "Keep Learning! 💪";
-      feedback.textContent = "Review the model explanations and try another shuffle for practice.";
+      badge.style.background = "var(--accent-gradient)";
+      if (percentage >= 90) {
+        badge.textContent = "A+";
+        title.textContent = "Outstanding Performance! 🌟";
+        feedback.textContent = "Superb mastery of both Mathematics and Science topics!";
+      } else if (percentage >= 75) {
+        badge.textContent = "A";
+        title.textContent = "Great Job! 🎉";
+        feedback.textContent = "You demonstrated strong understanding across all sections.";
+      } else if (percentage >= 50) {
+        badge.textContent = "B";
+        title.textContent = "Good Effort! 👍";
+        feedback.textContent = "Solid start! Take a look at the explanations to improve.";
+      } else {
+        badge.textContent = "C";
+        title.textContent = "Keep Practicing! 💪";
+        feedback.textContent = "Review model explanations and try another shuffle for practice.";
+      }
+    }
+
+    // Populate Academic Integrity Audit Card
+    this.totalViolationsCount.textContent = this.totalViolations;
+    this.finalStrikesCount.textContent = `${this.strikes} / 3`;
+
+    if (isDisqualified || this.strikes >= 3) {
+      this.integrityStatusIcon.textContent = "🔴";
+      this.integrityStatusTitle.textContent = "Academic Integrity: High Risk (Disqualified)";
+      this.integrityStatusSubtitle.textContent = "Candidate accumulated multiple critical infractions exceeding the threshold.";
+    } else if (this.totalViolations > 0) {
+      this.integrityStatusIcon.textContent = "🟡";
+      this.integrityStatusTitle.textContent = "Academic Integrity: Warning Flags Logged";
+      this.integrityStatusSubtitle.textContent = `${this.totalViolations} minor event(s) recorded during session. Review incident log below.`;
+    } else {
+      this.integrityStatusIcon.textContent = "🟢";
+      this.integrityStatusTitle.textContent = "Academic Integrity: Clean & Verified";
+      this.integrityStatusSubtitle.textContent = "No unauthorized window or clipboard actions detected throughout session.";
+    }
+
+    // Populate Incident Log in Modal
+    if (this.incidentLog.length === 0) {
+      this.modalIncidentLog.innerHTML = `<div class="empty-log-msg">No security violations recorded for this assessment attempt.</div>`;
+    } else {
+      this.modalIncidentLog.innerHTML = this.incidentLog.map(inc => `
+        <div class="incident-row">
+          <span class="incident-timestamp">[${inc.timeString}]</span>
+          <span><strong>${inc.type}:</strong> ${inc.message}</span>
+        </div>
+      `).join("");
     }
 
     this.renderWorksheet();
     this.openModal();
   }
 
-  /**
-   * Highlight options and inputs on review
-   */
   highlightAnswers() {
     this.currentQuestions.forEach(q => {
       const card = document.getElementById(`card_${q.id}`);
@@ -1047,7 +1478,7 @@ class WorksheetApp {
     toast.classList.add("visible");
     setTimeout(() => {
       toast.classList.remove("visible");
-    }, 3000);
+    }, 3200);
   }
 
   escapeHtml(str) {
@@ -1061,7 +1492,7 @@ class WorksheetApp {
   }
 }
 
-// Start application on DOM Ready
+// Bootstrapping
 document.addEventListener("DOMContentLoaded", () => {
   window.worksheetApp = new WorksheetApp();
 });
